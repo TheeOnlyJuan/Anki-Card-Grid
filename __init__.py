@@ -1,9 +1,7 @@
 from anki import hooks
 
-from aqt.qt import (Qt, QAction, QStandardPaths,
-                    QImage, QPainter, QSize, QEvent, QSizePolicy,
-                    QFileDialog, QDialog, QHBoxLayout, QVBoxLayout, QGroupBox,
-                    QLineEdit, QLabel, QCheckBox, QSpinBox, QComboBox, QPushButton)
+from aqt.qt import (Qt, QAction, QDialog, QHBoxLayout, QVBoxLayout,
+                    QLabel, QCheckBox, QSpinBox, QComboBox, QPushButton)
 from anki.utils import ids2str
 from aqt.webview import AnkiWebView
 import unicodedata
@@ -67,7 +65,6 @@ def scoreAdjust(score):
 
 def initialize_addon():
     #TODO add initialization of settings, if any
-    print('Alive')
     from aqt import mw
 
     #if import fails bail :(
@@ -154,8 +151,6 @@ def launch_options_dialog(mw):
             g = groups.groups[group_by.currentIndex() - len(SortOrder)]
             gc = 0
             values_list = [u.value for u in notes.values()]
-            print('gc')
-            print(len(g.data))
             for i in range(1, len(g.data)):
                 html += "<h2 style=\"color:#888;\">%s Kanji</h2>\n" % g.data[i][0]
                 table = "<div class=\"maintable\">\n"
@@ -179,7 +174,13 @@ def launch_options_dialog(mw):
                     table += "</div></details>\n"
                 html += "<h4 style=\"color:#888;\">%d of %d - %0.2f%%</h4>\n" % (n, t, n * 100.0 / t)
                 html += table
-            chars = reduce(lambda x, y: x+y, dict(g.data).values())
+            if isinstance(g.data[1][1], str):
+                chars = reduce(lambda x, y: x+y, dict(g.data).values())
+            else:
+                chars = []
+                for x in g.data:
+                    chars.extend(x[-1])
+
             html += "<h2 style=\"color:#888;\">%s Kanji</h2>" % g.data[0][0]
             table = "<div class=\"maintable\">\n"
             count = -1
@@ -200,7 +201,6 @@ def launch_options_dialog(mw):
     #deck selection
     deck_checkbox = CheckableComboBox()
     deck_names = mw.col.decks.allNames()
-    print(deck_names)
     deck_checkbox.addItems(deck_names)
     layout.addWidget(QLabel("Decks to search:"))
     layout.addWidget(deck_checkbox)
@@ -208,7 +208,6 @@ def launch_options_dialog(mw):
     #field to look at
     field_checkbox = CheckableComboBox()
     def selection_changed(decknames):
-        print(decknames)
         field_checkbox.clear()
         for deck_name in decknames.split('" '):
             if len(deck_name) > 0:
@@ -231,30 +230,13 @@ def launch_options_dialog(mw):
         for card_id in card_ids:
             deck_fields[deck_id] = mw.col.getCard(card_id).note().keys()
 
-    print(mw.col.decks.decks.keys())
-    print(mw.col.decks.get(mw.col.conf['curDeck']))
-    current_deck = mw.col.conf['curDeck']
-    print(current_deck)
-    print(mw.col.decks.children(current_deck))
+
     deck_checkbox.currentTextChanged.connect(selection_changed)
     current_deck = mw.col.conf['curDeck']
     deck_checkbox.selectItemByValue(mw.col.decks.get(current_deck)["name"])
     selection_changed(deck_checkbox.currentText())
     layout.addWidget(QLabel("Fields to search:"))
     layout.addWidget(field_checkbox)
-
-
-    print(deck_fields)
-    print()
-    #get cards
-    deck_ids = [current_deck]
-    card_ids = mw.col.db.list("select id from cards where did in %s or odid in %s" % (ids2str(deck_ids), ids2str(deck_ids)))
-    print(len(card_ids))
-    print(card_ids[0])
-    card = mw.col.getCard(card_ids[0])
-    print("card here")
-    print(card)
-    print(card.note().keys())
 
     #Group By
     group_layout = QHBoxLayout()
@@ -313,8 +295,7 @@ def launch_options_dialog(mw):
         for deck in deck_ids:
             for _, child_id in mw.col.decks.children(deck):
                 deck_ids.append(child_id)
-        print("deck ids")
-        print(deck_ids)
+
         card_ids = mw.col.db.list(
             "select id from cards where did in %s or odid in %s" % (ids2str(deck_ids), ids2str(deck_ids)))
 
@@ -339,7 +320,6 @@ def launch_options_dialog(mw):
                     update_info(card.note()[key],card, notes, (not use_entire_word.isChecked())) #TODO specify mode
 
         def generate_grid(notes):
-            print(notes)
             html = generate_html(notes)
             ui = QDialog(mw)
             window_view = HtmlWindow()
@@ -362,8 +342,6 @@ def launch_options_dialog(mw):
 
         mw.progress.finish()
         generate_grid(notes)
-
-        print("done")
 
 
 class HtmlWindow(AnkiWebView):
