@@ -110,8 +110,9 @@ def launch_options_dialog(mw):
             tile += "\t<div style=\"border: black; border-width: 1px; border-style: solid; background:%s;\" title=\"%s\">" % (bgcolour, tooltip)
             # else:
             #     tile += "\t<div style=\"background:%s;\">" % (bgcolour)
-            tile += "<a href=\"http://jisho.org/search/%s%%20%%23kanji\" style=\"color:%s;margin: 2px;\">%s</a></div>\n" % (
-            char, colour, char)
+            search_text = char if use_entire_word.isChecked() else '%s%%20%%23kanji' % char
+            tile += "<a href=\"http://jisho.org/search/%s\" style=\"color:%s;margin: 2px;\">%s</a></div>\n" % (
+                search_text, colour, char)
 
             return tile
         html = "<!doctype html><html><head><meta charset=\"UTF-8\" /><title>Anki Character Grid</title>"
