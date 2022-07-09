@@ -334,11 +334,14 @@ def launch_options_dialog(mw):
             # hl.addWidget(sh)
             # sp = QPushButton("Save Image", clicked=self.savepng)
             # hl.addWidget(sp)
+            ab = QPushButton("Back", clicked=ui.accept)
+            hl.addWidget(ab)
             bb = QPushButton("Close", clicked=ui.reject)
             hl.addWidget(bb)
             ui.setLayout(vl)
             ui.resize(500, 400)
-            ui.show()
+            if ui.exec():
+                launch_options_dialog(mw)
             return 0
 
         mw.progress.finish()
