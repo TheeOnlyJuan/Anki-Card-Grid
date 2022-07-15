@@ -1,0 +1,3 @@
+{"defaults": {"pattern": "kanji", "literal": false, "interval": 180, "thin": 20, "wide": 48, "groupby": 0, "unseen": true, "tooltips": false, "kanjionly": true, "autothinwide": true, "decks": []},
+"decks": [],
+"fields": []}

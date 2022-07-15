@@ -9,6 +9,7 @@ import re
 import urllib.parse
 from functools import reduce
 import enum
+import types
 
 from . import groups
 from .multiCheckBoxList import CheckableComboBox
@@ -196,24 +197,29 @@ def launch_options_dialog(mw):
             html += "<style type=\"text/css\">.datasource{font-style:italic;font-size:0.75em;margin-top:1em;overflow-wrap:break-word;}.datasource a{color:#1034A6;}</style><span class=\"datasource\">Data source: " + ' '.join("<a href=\"{}\">{}</a>".format(w, urllib.parse.unquote(w)) if re.match("https?://", w) else w for w in g.source.split(' ')) + "</span>"
         # print(html)
         return html
+    #UI Creation
     ui = QDialog(mw)
     layout = QVBoxLayout()
+    config = mw.addonManager.getConfig(__name__)
+    config_defaults = types.SimpleNamespace(**config['defaults'])
 
     #deck selection
     deck_checkbox = CheckableComboBox()
-    deck_names = mw.col.decks.allNames()
-    deck_checkbox.addItems(deck_names)
+    deck_checkbox.addItems(mw.col.decks.allNames())
     layout.addWidget(QLabel("Decks to search:"))
     layout.addWidget(deck_checkbox)
+    for val in config['decks']:
+        deck_checkbox.selectItemByValue(val)
 
     #field to look at
     field_checkbox = CheckableComboBox()
-    def selection_changed(decknames):
+    def selection_changed(decknames, check_first = True):
         field_checkbox.clear()
         for deck_name in decknames.split('" '):
             if len(deck_name) > 0:
                 field_checkbox.addItems(deck_fields[names_to_ids[deck_name]])
-        field_checkbox.selectItem(0)
+        if check_first:
+            field_checkbox.selectItem(0)
 
     #Get deck ids and mappings
     deck_ids = mw.col.decks.decks.keys()
@@ -235,7 +241,13 @@ def launch_options_dialog(mw):
     deck_checkbox.currentTextChanged.connect(selection_changed)
     current_deck = mw.col.conf['curDeck']
     deck_checkbox.selectItemByValue(mw.col.decks.get(current_deck)["name"])
-    selection_changed(deck_checkbox.currentText())
+    if len(config['fields']) > 0:
+        selection_changed(deck_checkbox.currentText(), False)
+        for field in config['fields']:
+            field_checkbox.selectItemByValue(field)
+    else:
+        selection_changed(deck_checkbox.currentText())
+
     layout.addWidget(QLabel("Fields to search:"))
     layout.addWidget(field_checkbox)
 
@@ -291,6 +303,9 @@ def launch_options_dialog(mw):
     ui.resize(500, 400)
     if ui.exec_():
         mw.progress.start(immediate=True)
+        config['decks'] = deck_checkbox.currentText().split('" ')
+        config['fields'] = field_checkbox.currentText().split('" ')
+        mw.addonManager.writeConfig(__name__, config)
         fields_to_check = [ x for x in field_checkbox.currentText().split('" ')]
         deck_ids = [ names_to_ids[x] for x in deck_checkbox.currentText().split('" ')]
         for deck in deck_ids:
