@@ -208,8 +208,6 @@ def launch_options_dialog(mw):
     deck_checkbox.addItems(mw.col.decks.allNames())
     layout.addWidget(QLabel("Decks to search:"))
     layout.addWidget(deck_checkbox)
-    for val in config['decks']:
-        deck_checkbox.selectItemByValue(val)
 
     #field to look at
     field_checkbox = CheckableComboBox()
@@ -238,9 +236,12 @@ def launch_options_dialog(mw):
             deck_fields[deck_id] = mw.col.getCard(card_id).note().keys()
 
 
+    for val in config['decks']:
+        deck_checkbox.selectItemByValue(val)
     deck_checkbox.currentTextChanged.connect(selection_changed)
-    current_deck = mw.col.conf['curDeck']
-    deck_checkbox.selectItemByValue(mw.col.decks.get(current_deck)["name"])
+    if len(config['decks']) == 0:
+        current_deck = mw.col.conf['curDeck']
+        deck_checkbox.selectItemByValue(mw.col.decks.get(current_deck)["name"])
     if len(config['fields']) > 0:
         selection_changed(deck_checkbox.currentText(), False)
         for field in config['fields']:
@@ -310,6 +311,7 @@ def launch_options_dialog(mw):
         config['unseen'] = show_unseen.isChecked()
         config['word'] = use_entire_word.isChecked()
         config['group_by'] = group_by.currentIndex()
+        print(config['decks'])
         mw.addonManager.writeConfig(__name__, config)
         fields_to_check = [ x for x in field_checkbox.currentText().split('" ')]
         deck_ids = [ names_to_ids[x] for x in deck_checkbox.currentText().split('" ')]
