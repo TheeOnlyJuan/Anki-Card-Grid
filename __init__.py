@@ -257,14 +257,16 @@ def launch_options_dialog(mw):
     group_by.addItems(["None, sorted by " + x.pretty_value() for x in SortOrder])
     group_by.addItems([x.name for x in groups.groups])
     #group_by.setCurrentIndex(config.group_by)
+    group_by.setCurrentIndex(config['group_by'])
     group_layout.addWidget(QLabel("Group by:"))
     use_entire_word = QCheckBox("Group using entire word")
+    use_entire_word.setChecked(config['word'])
     group_layout.addWidget(use_entire_word)
 
     layout.addLayout(group_layout)
     layout.addWidget(group_by)
     show_unseen = QCheckBox("Show characters not yet seen")
-    # shnew.setChecked(config.unseen)
+    show_unseen.setChecked(config['unseen'])
     layout.addWidget(show_unseen)
 
     #colors
@@ -305,6 +307,9 @@ def launch_options_dialog(mw):
         mw.progress.start(immediate=True)
         config['decks'] = deck_checkbox.currentText().split('" ')
         config['fields'] = field_checkbox.currentText().split('" ')
+        config['unseen'] = show_unseen.isChecked()
+        config['word'] = use_entire_word.isChecked()
+        config['group_by'] = group_by.currentIndex()
         mw.addonManager.writeConfig(__name__, config)
         fields_to_check = [ x for x in field_checkbox.currentText().split('" ')]
         deck_ids = [ names_to_ids[x] for x in deck_checkbox.currentText().split('" ')]
